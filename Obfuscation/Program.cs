@@ -55,7 +55,8 @@ namespace Obfuscation
                     case 2:
                         {
                             string userString = GetStringToBeAltered();
-                            EncryptStringWithRandomKey(userString);
+                            string[] result = EncryptStringWithRandomKey(userString);
+                            Console.WriteLine($"Converted: {result[0]}\nKey: {result[1]}");
                             Console.ReadLine();
                             Console.Clear();
                             break;
@@ -105,33 +106,26 @@ namespace Obfuscation
             }
             return encryptedString;
         }
-        static void EncryptStringWithRandomKey(string stringToBeConverted)
+        static string[] EncryptStringWithRandomKey(string stringToBeConverted)
         {
             Random random = new Random();
-            int key = random.Next(0, 99);
+            int key = random.Next(1, 99);
             string encryptedString = "";
             char[] charArray = stringToBeConverted.ToCharArray();
             int[] valueArray = new int[charArray.Length];
 
-            foreach (byte b in charArray)
-            {
-                charArray.CopyTo(valueArray, 0);
-            }
+            foreach (byte b in charArray) charArray.CopyTo(valueArray, 0);
 
             for (int i = 0; i < key; i++)
             {
-                for (int k = 0; k < valueArray.Length; k++)
-                {
-                    valueArray[k]++;
-                }
+                for (int k = 0; k < valueArray.Length; k++) valueArray[k]++;
             }
 
-            foreach (int i in valueArray)
-            {
-                encryptedString = encryptedString + Convert.ToChar(i);
-            }
-            Console.WriteLine($"Converted: {encryptedString}");
-            Console.WriteLine("\nKey:" + key);
+            foreach (int i in valueArray) encryptedString = encryptedString + Convert.ToChar(i);
+
+            string[] result = new string[2] {encryptedString, key.ToString()};
+
+            return result;
         }
         static string DecryptString(string stringToBeConverted, int key)
         {
