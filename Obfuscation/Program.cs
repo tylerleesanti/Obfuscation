@@ -4,25 +4,14 @@ namespace Obfuscation
 {
     internal class Program
     {
-        static string GetStringToBeAltered()
+        static string[] GetStringAndKeyFromUser()
         {
             Console.Write("Enter string: ");
-            string entry = Console.ReadLine();
-            return entry;
-        }
-        static int GetEncryptionKey()
-        {
-            int key = 0;
-            Console.Write("Enter key: ");
-            try
-            {
-                key = Int32.Parse(Console.ReadLine());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-            return key;
+            string stringToBeAltered = Console.ReadLine();
+            Console.Write("Enter Encyrption (Leave blank to use random key)\nKey: ");
+            string key = Console.ReadLine();
+            string[] result = new string[2] {stringToBeAltered, key};
+            return result;
         }
         static void DisplayMenu()
         {
@@ -30,7 +19,7 @@ namespace Obfuscation
             do
             {
                 int menuSelection = 0;
-                Console.WriteLine("What would you like to do?\n1)Encrypt string, providing a key\n2)Encrypt String using random key\n3)Decrypt string, by providing a key");
+                Console.WriteLine("What would you like to do?\n1)Encrypt phrase\n2)Decrypt phrase");
                 Console.Write("Selection: ");
                 try
                 {
@@ -45,26 +34,24 @@ namespace Obfuscation
                 {
                     case 1:
                         {
-                            string userString = GetStringToBeAltered();
-                            int userKey = GetEncryptionKey();
-                            Console.WriteLine($"Converted: " + EncryptString(userString, userKey));
+                            string[] entry = GetStringAndKeyFromUser();
+                            string userString = entry[0];
+                            string userKey = entry[1];
+                            string[] result = EncryptString(userString, userKey);
+                            Console.WriteLine($"Converted: {result[0]}");
+                            if (result[2] == "")
+                            {
+                                Console.WriteLine($"Key: {result[1]}");
+                            }
                             Console.ReadLine();
                             Console.Clear();
                             break;
                         }
                     case 2:
                         {
-                            string userString = GetStringToBeAltered();
-                            string[] result = EncryptStringWithRandomKey(userString);
-                            Console.WriteLine($"Converted: {result[0]}\nKey: {result[1]}");
-                            Console.ReadLine();
-                            Console.Clear();
-                            break;
-                        }
-                    case 3:
-                        {
-                            string userString = GetStringToBeAltered();
-                            int userKey = GetEncryptionKey();
+                            string[] entry = GetStringAndKeyFromUser();
+                            string userString = entry[0];
+                            string userKey = entry[1];
                             Console.WriteLine($"Converted: " + DecryptString(userString, userKey));
                             Console.ReadLine();
                             Console.Clear();
@@ -81,11 +68,29 @@ namespace Obfuscation
                 } 
             } while (showMenu == 0);
         }
-        static string EncryptString(string stringToBeConverted, int key)
+        static string[] EncryptString(string stringToBeConverted, string sKey)
         {
+            int key = 0;
+            Random random = new Random();
             string encryptedString = "";
             char[] charArray = stringToBeConverted.ToCharArray();
             int[] valueArray = new int[charArray.Length];
+
+            if (sKey == "")
+            {
+                key = random.Next(1, 99);
+            }
+            else
+            {
+                try
+                {
+                    key = Int32.Parse(sKey);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
 
             foreach (byte b in charArray)
             {
@@ -104,34 +109,24 @@ namespace Obfuscation
             {
                 encryptedString = encryptedString + Convert.ToChar(i);
             }
-            return encryptedString;
-        }
-        static string[] EncryptStringWithRandomKey(string stringToBeConverted)
-        {
-            Random random = new Random();
-            int key = random.Next(1, 99);
-            string encryptedString = "";
-            char[] charArray = stringToBeConverted.ToCharArray();
-            int[] valueArray = new int[charArray.Length];
 
-            foreach (byte b in charArray) charArray.CopyTo(valueArray, 0);
-
-            for (int i = 0; i < key; i++)
-            {
-                for (int k = 0; k < valueArray.Length; k++) valueArray[k]++;
-            }
-
-            foreach (int i in valueArray) encryptedString = encryptedString + Convert.ToChar(i);
-
-            string[] result = new string[2] {encryptedString, key.ToString()};
-
+            string[] result = new string[3] { encryptedString, key.ToString(), sKey };
             return result;
         }
-        static string DecryptString(string stringToBeConverted, int key)
+        static string DecryptString(string stringToBeConverted, string sKey)
         {
+            int key = 0;
             char[] charArray = stringToBeConverted.ToCharArray();
             int[] valueArray = new int[charArray.Length];
             string decryptedString = "";
+            try
+            {
+                key = Int32.Parse(sKey);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
             foreach (byte b in charArray)
             {
