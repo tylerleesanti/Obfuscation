@@ -1,80 +1,21 @@
 ﻿using System;
+using System.IO;
 
 namespace Obfuscation
 {
     internal class Program
     {
-        static string[] GetStringAndKeyFromUser()
+        static void ClearOnKeyPress()
         {
-            Console.Write("Enter string: ");
-            string stringToBeAltered = Console.ReadLine();
-            Console.Write("Enter Encyrption (Leave blank to use random key)\nKey: ");
-            string key = Console.ReadLine();
-            string[] result = new string[2] {stringToBeAltered, key};
-            return result;
+            Console.ReadLine();
+            Console.Clear();
         }
-        static void DisplayMenu()
+        static int GetKey()
         {
-            int showMenu = 1;
-            do
-            {
-                int menuSelection = 0;
-                Console.WriteLine("What would you like to do?\n1)Encrypt phrase\n2)Decrypt phrase");
-                Console.Write("Selection: ");
-                try
-                {
-                    menuSelection = Int32.Parse(Console.ReadLine());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-                Console.Clear();
-                switch (menuSelection)
-                {
-                    case 1:
-                        {
-                            string[] entry = GetStringAndKeyFromUser();
-                            string userString = entry[0];
-                            string userKey = entry[1];
-                            string[] result = EncryptString(userString, userKey);
-                            Console.WriteLine($"Converted: {result[0]}");
-                            if (result[2] == "")
-                            {
-                                Console.WriteLine($"Key: {result[1]}");
-                            }
-                            Console.ReadLine();
-                            Console.Clear();
-                            break;
-                        }
-                    case 2:
-                        {
-                            string[] entry = GetStringAndKeyFromUser();
-                            string userString = entry[0];
-                            string userKey = entry[1];
-                            Console.WriteLine($"Converted: " + DecryptString(userString, userKey));
-                            Console.ReadLine();
-                            Console.Clear();
-                            break;
-                        }
-                    default:
-                        {
-                            Console.WriteLine("Try again");
-                            showMenu = 0;
-                            Console.ReadLine();
-                            Console.Clear();
-                            break;
-                        }
-                } 
-            } while (showMenu == 0);
-        }
-        static string[] EncryptString(string stringToBeConverted, string sKey)
-        {
-            int key = 0;
             Random random = new Random();
-            string encryptedString = "";
-            char[] charArray = stringToBeConverted.ToCharArray();
-            int[] valueArray = new int[charArray.Length];
+            int key = 0;
+            Console.Write("Enter Encryption (Leave blank to use random key)\nKey: ");
+            string sKey = Console.ReadLine();
 
             if (sKey == "")
             {
@@ -91,6 +32,38 @@ namespace Obfuscation
                     Console.WriteLine(e);
                 }
             }
+            return key;
+        }
+        static string GetPhrase()
+        {
+            Console.Write("Enter Phrase: ");
+
+            string phrase = Console.ReadLine();
+            return phrase;
+        }
+        static string GetFilePath()
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            Console.Write($"Enter File Name: {desktopPath}\\");
+            string fileName = Console.ReadLine();
+            string filePath = desktopPath + $"\\{fileName}";
+
+            return filePath;
+        }
+        static string[] OpenFile(string filePath)
+        {
+            string[] document = File.ReadAllLines(filePath);
+            return document;
+        }
+        static void SaveFile(string filePath, string[] document)
+        {
+            File.WriteAllLines(filePath, document);
+        }
+        static string Encrypt(string textToEncrypt, int key)
+        {
+            string encryptedString = "";
+            char[] charArray = textToEncrypt.ToCharArray();
+            int[] valueArray = new int[charArray.Length];
 
             foreach (byte b in charArray)
             {
@@ -104,29 +77,19 @@ namespace Obfuscation
                     valueArray[k]++;
                 }
             }
-            
+
             foreach (int i in valueArray)
             {
                 encryptedString = encryptedString + Convert.ToChar(i);
             }
 
-            string[] result = new string[3] { encryptedString, key.ToString(), sKey };
-            return result;
+            return encryptedString;
         }
-        static string DecryptString(string stringToBeConverted, string sKey)
+        static string Decrypt(string textToDecrypt, int key)
         {
-            int key = 0;
-            char[] charArray = stringToBeConverted.ToCharArray();
+            char[] charArray = textToDecrypt.ToCharArray();
             int[] valueArray = new int[charArray.Length];
-            string decryptedString = "";
-            try
-            {
-                key = Int32.Parse(sKey);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            string decryptedPhrase = "";
 
             foreach (byte b in charArray)
             {
@@ -140,12 +103,119 @@ namespace Obfuscation
                     valueArray[k]--;
                 }
             }
-            
+
             foreach (int i in valueArray)
             {
-                decryptedString = decryptedString + Convert.ToChar(i);
+                decryptedPhrase = decryptedPhrase + Convert.ToChar(i);
             }
-            return decryptedString;
+            return decryptedPhrase;
+        }
+        static string[] HandleEncryptPhraseRequest(string stringToBeConverted)
+        {
+            int key = GetKey();
+            string encryptedString = Encrypt(stringToBeConverted, key);
+            string[] result = new string[2] {encryptedString, key.ToString()};
+
+            return result;
+        }
+        static string[] HandleDecryptionRequest(string stringToBeConverted)
+        {
+            int key = GetKey();
+            string decryptedPhrase = Decrypt(stringToBeConverted, key);
+            string[] result = new string[2] { decryptedPhrase, key.ToString() };
+
+            return result;
+        }
+        static void HandleEncryptDocumentRequest(string filePath)
+        {
+            int key = GetKey();
+            int lineCount = 0;
+            string[] document = OpenFile(filePath);
+            string[] encryptedDocument = new string[document.Length];
+
+            foreach (string line in document)
+            {
+                encryptedDocument[lineCount] = Encrypt(line, key);
+                lineCount++;
+            }
+
+            SaveFile(filePath, encryptedDocument);
+            Console.WriteLine($"File Encrypted & Saved at: {filePath}");
+        }
+        static void HandleDecryptDocumentRequest(string filePath)
+        {
+            int key = GetKey();
+            int lineCount = 0;
+            string[] document = OpenFile(filePath);
+            string[] encryptedDocument = new string[document.Length];
+
+            foreach (string line in document)
+            {
+                encryptedDocument[lineCount] = Decrypt(line, key);
+                lineCount++;
+            }
+
+            SaveFile(filePath, encryptedDocument);
+            Console.WriteLine($"File Decrypted & Saved at: {filePath}");
+        }
+        static void DisplayMenu()
+        {
+            int showMenu = 0;
+            do
+            {
+                int menuSelection = 0;
+                Console.WriteLine("What would you like to do?\n1)Encrypt phrase\n2)Encrypt Word Document\n3)Decrypt phrase\n4)Decrypt Word Document");
+                Console.Write("Selection: ");
+                try
+                {
+                    menuSelection = Int32.Parse(Console.ReadLine());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+                Console.Clear();
+                switch (menuSelection)
+                {
+                    case 1:
+                        {
+                            string phraseToEncrypt = GetPhrase();
+                            string[] result = HandleEncryptPhraseRequest(phraseToEncrypt);
+                            Console.WriteLine($"Converted: {result[0]}\nKey: {result[1]}");
+                            ClearOnKeyPress();
+                            break;
+                        }
+                    case 2:
+                        {
+                            string filePath = GetFilePath();
+                            HandleEncryptDocumentRequest(filePath);
+                            ClearOnKeyPress();
+                            break;
+                        }
+                    case 3:
+                        {
+                            string phraseToDecrypt = GetPhrase();
+                            string[] result = HandleDecryptionRequest(phraseToDecrypt);
+                            Console.WriteLine($"Converted: {result[0]}\nKey: {result[1]}");
+                            ClearOnKeyPress();
+                            break;
+                        }
+                    case 4:
+                        {
+                            string filePath = GetFilePath();
+                            HandleDecryptDocumentRequest(filePath);
+                            ClearOnKeyPress();
+                            break;
+                        }
+                    default:
+                        {
+                            Console.WriteLine("Try again");
+                            showMenu = 1;
+                            ClearOnKeyPress();
+                            break;
+                        }
+                }
+            } while (showMenu == 1);
         }
         static void Main(string[] args)
         {
