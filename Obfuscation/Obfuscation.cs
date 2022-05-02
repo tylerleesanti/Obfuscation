@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Obfuscation
 {
-    internal class Program
+    internal class Obfuscation
     {
         static void ClearOnKeyPress()
         {
@@ -52,17 +52,26 @@ namespace Obfuscation
         }
         static string[] OpenFile(string filePath)
         {
-            string[] document = File.ReadAllLines(filePath);
+            string[] document;
+            try
+            {
+                document = File.ReadAllLines(filePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
             return document;
         }
         static void SaveFile(string filePath, string[] document)
         {
             File.WriteAllLines(filePath, document);
         }
-        static string Encrypt(string textToEncrypt, int key)
+        static string Encrypt(string textToConvert, int key)
         {
             string encryptedString = "";
-            char[] charArray = textToEncrypt.ToCharArray();
+            char[] charArray = textToConvert.ToCharArray();
             int[] valueArray = new int[charArray.Length];
 
             foreach (byte b in charArray)
@@ -85,9 +94,9 @@ namespace Obfuscation
 
             return encryptedString;
         }
-        static string Decrypt(string textToDecrypt, int key)
+        static string Decrypt(string textToConvert, int key)
         {
-            char[] charArray = textToDecrypt.ToCharArray();
+            char[] charArray = textToConvert.ToCharArray();
             int[] valueArray = new int[charArray.Length];
             string decryptedPhrase = "";
 
@@ -140,7 +149,7 @@ namespace Obfuscation
             }
 
             SaveFile(filePath, encryptedDocument);
-            Console.WriteLine($"File Encrypted & Saved at: {filePath}");
+            Console.WriteLine($"File Encrypted & Saved at: {filePath}\nKey:{key}");
         }
         static void HandleDecryptDocumentRequest(string filePath)
         {
@@ -164,7 +173,7 @@ namespace Obfuscation
             do
             {
                 int menuSelection = 0;
-                Console.WriteLine("What would you like to do?\n1)Encrypt phrase\n2)Encrypt Word Document\n3)Decrypt phrase\n4)Decrypt Word Document");
+                Console.WriteLine("What would you like to do?\n1)Encrypt phrase\n2)Decrypt phrase\n3)Encrypt Text File\n4)Decrypt Text File");
                 Console.Write("Selection: ");
                 try
                 {
@@ -187,16 +196,16 @@ namespace Obfuscation
                         }
                     case 2:
                         {
-                            string filePath = GetFilePath();
-                            HandleEncryptDocumentRequest(filePath);
-                            ClearOnKeyPress();
-                            break;
-                        }
-                    case 3:
-                        {
                             string phraseToDecrypt = GetPhrase();
                             string[] result = HandleDecryptionRequest(phraseToDecrypt);
                             Console.WriteLine($"Converted: {result[0]}\nKey: {result[1]}");
+                            ClearOnKeyPress();
+                            break;                            
+                        }
+                    case 3:
+                        {
+                            string filePath = GetFilePath();
+                            HandleEncryptDocumentRequest(filePath);
                             ClearOnKeyPress();
                             break;
                         }
